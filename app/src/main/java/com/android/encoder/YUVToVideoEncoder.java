@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 
 public class YUVToVideoEncoder {
@@ -74,6 +75,18 @@ public class YUVToVideoEncoder {
         }
     }
 
+    public static String getProperty(final String key, final String defaultValue) {
+        String value = defaultValue;
+        try {
+            Class<?> c = Class.forName("android.os.SystemProperties");
+            Method get = c.getMethod("get", String.class, String.class);
+            value = (String)(get.invoke(c, key, defaultValue ));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return value;
+    }
+
     private static MediaFormat createFormat(int width, int height, int bitRate, int maxFps,
                                             String mimeType, int defaultQP, int maxQP, int minQP) {
         // 你提供的createFormat方法
@@ -90,15 +103,23 @@ public class YUVToVideoEncoder {
 
         format.setInteger("vendor.qti-ext-enc-blurinfo.info", 2);
         if (defaultQP != 0 || minQP != 0 || maxQP != 0) {
-            format.setInteger("vendor.qti-ext-enc-initial-qp.qp-i", defaultQP);
-            format.setInteger("vendor.qti-ext-enc-initial-qp.qp-i-enable", 1);
-            format.setInteger("vendor.qti-ext-enc-qp-range.qp-i-min", minQP);
-            format.setInteger("vendor.qti-ext-enc-qp-range.qp-i-max", maxQP);
+            String model = getProperty("ro.soc.model", "QCS865");
+            if (model.contains("QCS8550")) {
+                format.setInteger(MediaFormat.KEY_VIDEO_QP_MIN, minQP);
+                format.setInteger(MediaFormat.KEY_VIDEO_QP_MAX, maxQP);
+            } else {
+                format.setInteger("vendor.qti-ext-enc-blurinfo.info", 2);
 
-            format.setInteger("vendor.qti-ext-enc-initial-qp.qp-p", defaultQP);
-            format.setInteger("vendor.qti-ext-enc-initial-qp.qp-p-enable", 1);
-            format.setInteger("vendor.qti-ext-enc-qp-range.qp-p-min", minQP);
-            format.setInteger("vendor.qti-ext-enc-qp-range.qp-p-max", maxQP);
+                format.setInteger("vendor.qti-ext-enc-initial-qp.qp-i", defaultQP);
+                format.setInteger("vendor.qti-ext-enc-initial-qp.qp-i-enable", 1);
+                format.setInteger("vendor.qti-ext-enc-qp-range.qp-i-min", minQP);
+                format.setInteger("vendor.qti-ext-enc-qp-range.qp-i-max", maxQP);
+
+                format.setInteger("vendor.qti-ext-enc-initial-qp.qp-p", defaultQP);
+                format.setInteger("vendor.qti-ext-enc-initial-qp.qp-p-enable", 1);
+                format.setInteger("vendor.qti-ext-enc-qp-range.qp-p-min", minQP);
+                format.setInteger("vendor.qti-ext-enc-qp-range.qp-p-max", maxQP);
+            }
         }
 
         if (mimeType.equals(MediaFormat.MIMETYPE_VIDEO_AVC)) {
