@@ -39,8 +39,12 @@ public class YUVToVideoEncoder {
             FileInputStream fis = new FileInputStream(yuvFilePath);
             byte[] data = new byte[frameSize];
 
+            long frameInterval = 1000 / MAX_FPS;
+
             int size = 0;
             while ((size = fis.read(data)) != -1) {
+                long startTime = System.currentTimeMillis();
+
                 int inputBufferIndex = codec.dequeueInputBuffer(-1);
                 if (inputBufferIndex >= 0) {
                     ByteBuffer inputBuffer = codec.getInputBuffer(inputBufferIndex);
@@ -63,6 +67,13 @@ public class YUVToVideoEncoder {
 
                     codec.releaseOutputBuffer(outputBufferIndex, false);
                     outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 10000);
+                }
+
+                long useTime = System.currentTimeMillis()-startTime;
+                if(useTime<frameInterval) try {
+                    Thread.sleep(useTime);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
 
