@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
@@ -27,6 +28,12 @@ public class MainActivity extends Activity {
         }
 
         YUVToVideoEncoder yuvToVideoEncoder =new YUVToVideoEncoder();
-        yuvToVideoEncoder.encodeYUVtoVideo("/sdcard/yuv420sp.yuv", "/sdcard/video.h265");
+        new Thread(() -> {
+            yuvToVideoEncoder.encodeYUVtoVideo("/sdcard/yuv420sp.yuv", "/sdcard/video.h265");
+            runOnUiThread(() -> {
+                TextView tvNotify = findViewById(R.id.tv_notify);
+                tvNotify.setText(R.string.finish_encode);
+            });
+        }).start();
     }
 }

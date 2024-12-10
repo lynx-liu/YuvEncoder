@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">YuvEncoder</string>
+    <string name="encoding">正在进行编码</string>
+    <string name="finish_encode">编码结束</string>
 </resources>
